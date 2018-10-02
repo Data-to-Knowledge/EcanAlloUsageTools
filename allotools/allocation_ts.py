@@ -7,31 +7,10 @@ Created on Mon Oct  1 09:55:07 2018
 import numpy as np
 import pandas as pd
 from pdsql import mssql
-
-####################################
-### Test parameters
-
-#server = 'sql2012test01'
-database = 'hydro'
-allo_table = 'CrcAllo'
-wap_allo_table = 'CrcWapAllo'
-
-#from_date = '1999-07-01'
-#to_date = '2003-06-30'
-#freq = 'A-JUN'
-#restr_type = 'annual volume'
-#remove_months=False
+import parameters as param
 
 ###################################
 ### Functions
-
-status_codes = ['Terminated - Replaced', 'Issued - Active', 'Terminated - Surrendered', 'Terminated - Cancelled', 'Terminated - Expired', 'Terminated - Lapsed', 'Issued - s124 Continuance']
-
-use_type_dict = {'Aquaculture': 'agriculture', 'Dairy Shed (Washdown/Cooling)': 'agriculture', 'Intensive Farming - Dairy': 'agriculture', 'Intensive Farming - Other (Washdown/Stockwater/Cooling)': 'agriculture', 'Intensive Farming - Poultry': 'agriculture', 'Irrigation - Arable (Cropping)': 'agriculture', 'Irrigation - Industrial': 'agriculture', 'Irrigation - Mixed': 'agriculture', 'Irrigation - Pasture': 'agriculture', 'Irrigation Scheme': 'agriculture' , 'Viticulture': 'agricutlure', 'Community Water Supply': 'water_supply', 'Domestic Use': 'water_supply', 'Construction': 'industrial', 'Construction - Dewatering': 'industrial', 'Cooling Water (non HVAC)': 'industrial', 'Dewatering': 'industrial', 'Gravel Extraction/Processing': 'industrial', 'HVAC': 'industrial', 'Industrial Use - Concrete Plant': 'industrial', 'Industrial Use - Food Products': 'industrial', 'Industrial Use - Other': 'industrial', 'Industrial Use - Water Bottling': 'industrial', 'Mining': 'industrial', 'Firefighting ': 'municipal', 'Firefighting': 'municipal', 'Flood Control': 'municipal', 'Landfills': 'municipal', 'Stormwater': 'municipal', 'Waste Water': 'municipal', 'Stockwater': 'agriculture', 'Snow Making': 'industrial', 'Augment Flow/Wetland': 'other', 'Fisheries/Wildlife Management': 'other', 'Other': 'other', 'Recreation/Sport': 'other', 'Research (incl testing)': 'other', 'Power Generation': 'hydroelectric'}
-
-restr_type_dict = {'max rate': 'max_rate_crc', 'daily volume': 'daily_vol', 'annual volume': 'feav'}
-
-freq_codes = ['D', 'W', 'M', 'A-JUN']
 
 
 def allo_ts_apply(row, from_date, to_date, freq, restr_col, remove_months=False):
@@ -79,7 +58,7 @@ def allo_ts_apply(row, from_date, to_date, freq, restr_col, remove_months=False)
     return vols
 
 
-def allo_filter(allo, wap_allo, from_date='1900-07-01', to_date='2020-06-30', in_allo=True):
+def ts_filter(allo, wap_allo, from_date='1900-07-01', to_date='2020-06-30', in_allo=True):
     """
     Function to take an allo DataFrame and filter out the consents that cannot be converted to a time series due to missing data.
     """
@@ -105,7 +84,7 @@ def allo_filter(allo, wap_allo, from_date='1900-07-01', to_date='2020-06-30', in
     allo5 = allo5[(allo5['to_date'] - allo5['from_date']).dt.days > 31]
 
     ### Restrict by status_details
-    allo6 = allo5[allo5.crc_status.isin(status_codes)]
+    allo6 = allo5[allo5.crc_status.isin(param.status_codes)]
 
     ### In allocation columns
     if in_allo:
@@ -119,7 +98,7 @@ def allo_filter(allo, wap_allo, from_date='1900-07-01', to_date='2020-06-30', in
     return allo7
 
 
-def allo_ts_proc(server, from_date, to_date, freq, restr_type, remove_months=False, in_allo=True):
+def allo_ts(server, from_date, to_date, freq, restr_type, remove_months=False, in_allo=True):
     """
     Combo function to completely create a time series from the allocation DataFrame. Source data must be from an instance of the Hydro db.
 
@@ -146,19 +125,19 @@ def allo_ts_proc(server, from_date, to_date, freq, restr_type, remove_months=Fal
         indexed by crc, take_type, and allo_block
     """
 
-    if restr_type not in restr_type_dict:
-        raise ValueError('restr_type must be one of ' + str(list(restr_type_dict.keys())))
-    if freq not in freq_codes:
-        raise ValueError('freq must be one of ' + str(freq_codes))
+    if restr_type not in param.restr_type_dict:
+        raise ValueError('restr_type must be one of ' + str(list(param.restr_type_dict.keys())))
+    if freq not in param.freq_codes:
+        raise ValueError('freq must be one of ' + str(param.freq_codes))
 
-    allo = mssql.rd_sql(server, database, allo_table)
-    wap_allo = mssql.rd_sql(server, database, wap_allo_table)
+    allo = mssql.rd_sql(server, param.database, param.allo_table)
+    wap_allo = mssql.rd_sql(server, param.database, param.wap_allo_table)
 
     allo = allo.drop_duplicates(subset=['crc', 'take_type', 'allo_block'])
 
-    allo2 = allo_filter(allo, wap_allo, from_date=from_date, to_date=to_date, in_allo=in_allo)
+    allo2 = ts_filter(allo, wap_allo, from_date=from_date, to_date=to_date, in_allo=in_allo)
 
-    restr_col = restr_type_dict[restr_type]
+    restr_col = param.restr_type_dict[restr_type]
 
     allo3 = allo2.apply(allo_ts_apply, axis=1, from_date=from_date, to_date=to_date, freq=freq, restr_col=restr_col, remove_months=remove_months)
 

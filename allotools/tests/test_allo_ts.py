@@ -22,7 +22,7 @@ remove_months=False
 
 sites, allo, allo_wap = allo_filter(server, from_date, to_date)
 
-
+ts_allo = allo_ts(server, from_date, to_date, freq, restr_type)
 
 
 

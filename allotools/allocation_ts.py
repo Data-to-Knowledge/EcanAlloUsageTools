@@ -7,6 +7,7 @@ Created on Mon Oct  1 09:55:07 2018
 import numpy as np
 import pandas as pd
 from pdsql import mssql
+from filters import allo_filter
 import parameters as param
 
 ###################################
@@ -58,47 +59,7 @@ def allo_ts_apply(row, from_date, to_date, freq, restr_col, remove_months=False)
     return vols
 
 
-def ts_filter(allo, wap_allo, from_date='1900-07-01', to_date='2020-06-30', in_allo=True):
-    """
-    Function to take an allo DataFrame and filter out the consents that cannot be converted to a time series due to missing data.
-    """
-    allo.loc[:, 'to_date'] = pd.to_datetime(allo.loc[:, 'to_date'], errors='coerce')
-    allo.loc[:, 'from_date'] = pd.to_datetime(allo.loc[:, 'from_date'], errors='coerce')
-    allo1 = allo[allo.take_type.isin(['Take Surface Water', 'Take Groundwater'])]
-
-    wap_allo1 = wap_allo[(wap_allo.take_type == 'Take Surface Water') & (wap_allo.in_sw_allo)].crc.unique()
-
-    ### Remove consents without daily volumes (and consequently yearly volumes)
-    allo2 = allo1[allo1.daily_vol.notnull()]
-
-    ### Remove consents without to/from dates or date ranges of less than a month
-    allo3 = allo2[allo2['from_date'].notnull() & allo2['to_date'].notnull()]
-
-    ### Restrict dates
-    start_time = pd.Timestamp(from_date)
-    end_time = pd.Timestamp(to_date)
-
-    allo4 = allo3[(allo3['to_date'] - start_time).dt.days > 31]
-    allo5 = allo4[(end_time - allo4['from_date']).dt.days > 31]
-
-    allo5 = allo5[(allo5['to_date'] - allo5['from_date']).dt.days > 31]
-
-    ### Restrict by status_details
-    allo6 = allo5[allo5.crc_status.isin(param.status_codes)]
-
-    ### In allocation columns
-    if in_allo:
-        allo6 = allo6[(allo6.take_type == 'Take Surface Water') | ((allo6.take_type == 'Take Groundwater') & (allo6.in_gw_allo))]
-        allo6 = allo6[(allo6.take_type == 'Take Groundwater') | allo6.crc.isin(wap_allo1)]
-
-    ### Index the DataFrame
-    allo7 = allo6.set_index(['crc', 'take_type', 'allo_block']).copy()
-
-    ### Return
-    return allo7
-
-
-def allo_ts(server, from_date, to_date, freq, restr_type, remove_months=False, in_allo=True):
+def allo_ts(server, from_date, to_date, freq, restr_type, site_filter=None, crc_filter=None, crc_wap_filter=None, remove_months=False, in_allo=True):
     """
     Combo function to completely create a time series from the allocation DataFrame. Source data must be from an instance of the Hydro db.
 
@@ -130,12 +91,7 @@ def allo_ts(server, from_date, to_date, freq, restr_type, remove_months=False, i
     if freq not in param.freq_codes:
         raise ValueError('freq must be one of ' + str(param.freq_codes))
 
-    allo = mssql.rd_sql(server, param.database, param.allo_table)
-    wap_allo = mssql.rd_sql(server, param.database, param.wap_allo_table)
-
-    allo = allo.drop_duplicates(subset=['crc', 'take_type', 'allo_block'])
-
-    allo2 = ts_filter(allo, wap_allo, from_date=from_date, to_date=to_date, in_allo=in_allo)
+    sites, allo2, wap_allo = allo_filter(server, from_date=from_date, to_date=to_date, site_filter=site_filter, crc_filter=crc_filter, crc_wap_filter=crc_wap_filter, in_allo=in_allo)
 
     restr_col = param.restr_type_dict[restr_type]
 

@@ -6,7 +6,7 @@ Created on Wed Oct  3 16:40:35 2018
 """
 import pandas as pd
 from pdsql import mssql
-import parameters as param
+import allotools.parameters as param
 
 
 #########################################

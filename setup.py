@@ -10,7 +10,7 @@ here = os.path.abspath(os.path.dirname(__file__))
 name = 'EcanAlloUsageTools'
 main_package = 'allotools'
 # datasets = 'datasets'
-version = '0.0.1'
+version = '0.0.4'
 descrip = 'Functions to process and analyse ECan allocation and usage data'
 
 # The below code is for readthedocs. To have sphinx/readthedocs interact with

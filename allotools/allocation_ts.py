@@ -6,9 +6,8 @@ Created on Mon Oct  1 09:55:07 2018
 """
 import numpy as np
 import pandas as pd
-from pdsql import mssql
-from filters import allo_filter
-import parameters as param
+from allotools.filters import allo_filter
+import allotools.parameters as param
 
 ###################################
 ### Functions

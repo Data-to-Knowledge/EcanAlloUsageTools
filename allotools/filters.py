@@ -87,7 +87,7 @@ def allo_filter(server, from_date=None, to_date=None, site_filter=None, crc_filt
     elif isinstance(site_filter, list):
         site_cols.extend(site_filter)
         site_filter = None
-    sites = mssql.rd_sql(server, param.database, param.site_table, site_cols, where_col=site_filter)
+    sites = mssql.rd_sql(server, param.database, param.site_table, site_cols, site_filter)
     sites1 = sites[sites.ExtSiteID.str.contains('[A-Z]+\d\d/\d+')].copy()
 
     ### CrcWapAllo
@@ -98,7 +98,7 @@ def allo_filter(server, from_date=None, to_date=None, site_filter=None, crc_filt
     elif isinstance(crc_wap_filter, list):
         crc_wap_cols.update(set(crc_wap_filter))
         crc_wap_filter = None
-    crc_wap = mssql.rd_sql(server, param.database, param.wap_allo_table, list(crc_wap_cols), where_col=crc_wap_filter)
+    crc_wap = mssql.rd_sql(server, param.database, param.wap_allo_table, list(crc_wap_cols), crc_wap_filter)
     crc_wap1 = crc_wap[crc_wap.wap.isin(sites1.ExtSiteID)]
 
     ### CrcAllo
@@ -109,7 +109,7 @@ def allo_filter(server, from_date=None, to_date=None, site_filter=None, crc_filt
     elif isinstance(crc_wap_filter, list):
         crc_cols.update(set(crc_filter))
         crc_filter = None
-    crc_allo = mssql.rd_sql(server, param.database, param.allo_table, list(crc_cols), where_col=crc_filter)
+    crc_allo = mssql.rd_sql(server, param.database, param.allo_table, list(crc_cols), crc_filter)
     crc_allo1 = pd.merge(crc_allo, crc_wap1[['crc', 'take_type', 'allo_block']].drop_duplicates(), on=['crc', 'take_type', 'allo_block'])
 
     ## Update the CrcAllo table

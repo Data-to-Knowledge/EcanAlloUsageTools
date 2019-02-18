@@ -5,7 +5,7 @@ Created on Tue Oct  2 11:48:42 2018
 @author: michaelek
 """
 from allotools import allo_ts, allo_filter
-d
+
 #################################
 ### Parameters
 

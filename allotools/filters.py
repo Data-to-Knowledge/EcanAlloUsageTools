@@ -6,7 +6,7 @@ Created on Wed Oct  3 16:40:35 2018
 """
 import pandas as pd
 from pdsql import mssql
-import allotools.parameters as param
+import parameters as param
 
 
 #########################################
@@ -91,7 +91,7 @@ def allo_filter(server, from_date=None, to_date=None, site_filter=None, crc_filt
     sites1 = sites[sites.ExtSiteID.str.contains('[A-Z]+\d\d/\d+')].copy()
 
     ### CrcWapAllo
-    crc_wap_cols = set(['crc', 'take_type', 'allo_block', 'wap', 'max_rate_wap', 'in_sw_allo'])
+    crc_wap_cols = set(['crc', 'take_type', 'allo_block', 'wap', 'max_rate_wap', 'in_sw_allo', 'sd1_7', 'sd1_30', 'sd1_150'])
     if isinstance(crc_wap_filter, dict):
         extra_crc_wap_cols = set(crc_wap_filter.keys())
         crc_wap_cols.update(extra_crc_wap_cols)
@@ -106,10 +106,23 @@ def allo_filter(server, from_date=None, to_date=None, site_filter=None, crc_filt
     if isinstance(crc_filter, dict):
         extra_crc_cols = set(crc_filter.keys())
         crc_cols.update(extra_crc_cols)
+        if 'use_type' in crc_filter:
+            reverse_dict = {}
+            for key, val in param.use_type_dict.items():
+                try:
+                    reverse_dict[val].append(key)
+                except:
+                    reverse_dict[val] = [key]
+            use_types = []
+            [use_types.extend(reverse_dict[val]) for val in crc_filter['use_type']]
+            crc_filter = crc_filter.copy()
+            crc_filter.update({'use_type': use_types})
     elif isinstance(crc_wap_filter, list):
         crc_cols.update(set(crc_filter))
         crc_filter = None
     crc_allo = mssql.rd_sql(server, param.database, param.allo_table, list(crc_cols), crc_filter)
+    if 'use_type' in crc_allo:
+        crc_allo.replace({'use_type': param.use_type_dict}, inplace=True)
     crc_allo1 = pd.merge(crc_allo, crc_wap1[['crc', 'take_type', 'allo_block']].drop_duplicates(), on=['crc', 'take_type', 'allo_block'])
 
     ## Update the CrcAllo table

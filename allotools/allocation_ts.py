@@ -101,3 +101,8 @@ def allo_ts(server, from_date, to_date, freq, restr_type, site_filter=None, crc_
     allo4.name = 'allo'
 
     return allo4
+
+
+
+
+

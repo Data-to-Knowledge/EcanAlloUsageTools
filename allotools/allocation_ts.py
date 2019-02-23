@@ -30,30 +30,48 @@ def allo_ts_apply(row, from_date, to_date, freq, restr_col, remove_months=False)
 
     end_date = end - pd.DateOffset(hours=1) + pd.tseries.frequencies.to_offset(freq)
     dates1 = pd.date_range(start, end_date, freq=freq)
-    if remove_months and 'A' not in freq:
+    if remove_months and ('A' not in freq):
         mon1 = np.arange(row['from_month'], 13)
         mon2 = np.arange(1, row['to_month'] + 1)
         in_mons = np.concatenate((mon1, mon2))
         dates1 = dates1[dates1.month.isin(in_mons)]
-    dates2 = dates1 - pd.tseries.frequencies.to_offset(freq)
-    diff_days1 = (dates1 - dates2).days.values
-    diff_days2 = diff_days1.copy()
+
+    if dates1.empty:
+        return None
+
+    if freq == 'D':
+        val1 = 1
+    elif freq == 'W':
+        val1 = 7
+    elif freq == 'M':
+        val1 = dates1.daysinmonth.values
+    else:
+        val1 = dates1.dayofyear.values + 184
+
+    s1 = pd.Series(val1, index=dates1, name='allo')
 
     if freq in ['A-JUN', 'D', 'W']:
-        vol1 = row[restr_col]
+        vol1 = s1.copy()
+        vol1[:] = row[restr_col]
     elif 'M' in freq:
-        vol1 = dates1.daysinmonth.values / 365.0 * row[restr_col]
+        year1 = s1.resample('A-JUN').transform('sum')
+        vol1 = s1/year1 * row[restr_col]
     else:
-        raise ValueError("freq must be either 'A-JUN', 'M', or 'D'")
+        raise ValueError("freq must be either 'A-JUN', 'M', 'W', or 'D'")
 
-    if len(diff_days1) == 1:
-        diff_days2[0] = diff_days1[0] - (dates1[-1] - end).days - (diff_days1[0] - (dates1[0] - start).days)
+    alt_dates = s1.values.copy()
+    if len(s1) == 1:
+        alt_dates[0] = s1[0] - (dates1[-1] - end).days - (s1[0] - (dates1[0] - start).days)
     else:
-        diff_days2[0] = (dates1[0] - start).days + 1
-        diff_days2[-1] = diff_days1[-1] - (dates1[-1] - end).days
-    ratio_days = diff_days2/diff_days1
+        start_diff = (dates1[0] - start).days + 1
+        if start_diff < s1[0]:
+            alt_dates[0] = start_diff
+        end_diff = s1[-1] - (dates1[-1] - end).days
+        if end_diff < s1[-1]:
+            alt_dates[-1] = end_diff
+    ratio_days = alt_dates/s1
 
-    vols = pd.Series((ratio_days * vol1).round(), index=dates1)
+    vols = (ratio_days * vol1).round()
 
     return vols
 

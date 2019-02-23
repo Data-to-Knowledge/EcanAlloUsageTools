@@ -53,7 +53,7 @@ def ts_filter(allo, wap_allo, from_date='1900-07-01', to_date='2020-06-30', in_a
     return allo6, wap_allo2
 
 
-def allo_filter(server, from_date=None, to_date=None, site_filter=None, crc_filter=None, crc_wap_filter=None, in_allo=True):
+def allo_filter(server, from_date=None, to_date=None, site_filter=None, crc_filter=None, crc_wap_filter=None, in_allo=True, include_hydroelectric=False):
     """
     Function to filter consents and WAPs in various ways.
 
@@ -121,8 +121,9 @@ def allo_filter(server, from_date=None, to_date=None, site_filter=None, crc_filt
         crc_cols.update(set(crc_filter))
         crc_filter = None
     crc_allo = mssql.rd_sql(server, param.database, param.allo_table, list(crc_cols), crc_filter)
-    if 'use_type' in crc_allo:
-        crc_allo.replace({'use_type': param.use_type_dict}, inplace=True)
+    crc_allo.replace({'use_type': param.use_type_dict}, inplace=True)
+    if not include_hydroelectric:
+        crc_allo = crc_allo[crc_allo.use_type != 'hydroelectric']
     crc_allo1 = pd.merge(crc_allo, crc_wap1[['crc', 'take_type', 'allo_block']].drop_duplicates(), on=['crc', 'take_type', 'allo_block'])
 
     ## Update the CrcAllo table

@@ -7,15 +7,15 @@ Created on Sat Feb 16 09:50:42 2019
 import numpy as np
 import pandas as pd
 from pdsql import mssql
-import filters
+from allotools import filters
 #from allotools.allocation_ts import allo_ts_apply
-from allocation_ts import allo_ts_apply
-from plot import plot_group as pg
-from plot import plot_stacked as ps
+from allotools.allocation_ts import allo_ts_apply
+from allotools.plot import plot_group as pg
+from allotools.plot import plot_stacked as ps
 #import allotools.parameters as param
-import parameters as param
+import allotools.parameters as param
 from datetime import datetime
-import util
+from allotools import util
 
 ########################################
 ### Core class

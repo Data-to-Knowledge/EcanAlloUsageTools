@@ -1,6 +1,6 @@
 {% set name = "EcanAlloUsageTools" %}
-{% set version = "0.0.5" %}
-{% set sha256 = "ac6d15f13af2190fcc7a31479022367421fdf909dcdc70b822557c15c097c09f" %}
+{% set version = "0.1.3" %}
+{% set sha256 = "084035bf9fdc909f54d62b2ba4e61e6c06ad070273143e345b7b5c6eb59b25e2" %}
 
 # sha256 is the prefered checksum -- you can get it for a file with:
 #  `openssl sha256 <file name>`.
@@ -35,9 +35,10 @@ requirements:
     - python
     - setuptools
   run:
-    - python
+    - python>=3.6
     - pandas
     - pdsql>1.2.4
+    - seaborn
 
 test:
   imports:

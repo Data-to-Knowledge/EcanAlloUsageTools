@@ -10,7 +10,7 @@ here = os.path.abspath(os.path.dirname(__file__))
 name = 'EcanAlloUsageTools'
 main_package = 'allotools'
 # datasets = 'datasets'
-version = '0.1.0'
+version = '0.1.3'
 descrip = 'Functions to process and analyse ECan allocation and usage data'
 
 # The below code is for readthedocs. To have sphinx/readthedocs interact with
@@ -19,7 +19,7 @@ descrip = 'Functions to process and analyse ECan allocation and usage data'
 if os.environ.get('READTHEDOCS', False) == 'True':
     INSTALL_REQUIRES = []
 else:
-    INSTALL_REQUIRES = ['pandas', 'pdsql']
+    INSTALL_REQUIRES = ['pandas', 'pdsql', 'seaborn']
 
 # Get the long description from the README file
 with open(os.path.join(here, 'README.rst'), encoding='utf-8') as f:

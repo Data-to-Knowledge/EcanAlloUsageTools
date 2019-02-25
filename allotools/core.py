@@ -10,7 +10,7 @@ from pdsql import mssql
 import filters
 #from allotools.allocation_ts import allo_ts_apply
 from allocation_ts import allo_ts_apply
-import plot as allo_plot
+from plot import plot_group_yr as pg
 #import allotools.parameters as param
 import parameters as param
 from datetime import datetime
@@ -23,7 +23,7 @@ import util
 class AlloUsage(object):
 
     dataset_types = param.dataset_types
-    plot = allo_plot
+    plot_group = pg
 
     ### Initial import and assignment function
     def __init__(self, from_date=None, to_date=None, site_filter=None, crc_filter=None, crc_wap_filter=None, in_allo=True, include_hydroelectric=False):
@@ -97,11 +97,9 @@ class AlloUsage(object):
 
         ### Rearrange
         allo6 = allo5[['crc', 'take_type', 'allo_block', 'wap', 'date', 'sw_allo', 'gw_allo', 'total_allo']].copy()
-        allo6.set_index(['crc', 'take_type', 'allo_block', 'wap', 'date'], inplace=True)
+        allo6.set_index(param.pk, inplace=True)
 
         setattr(self, 'allo_ts', allo6)
-
-        return allo6
 
 
     def _est_allo_ts(self):
@@ -116,8 +114,8 @@ class AlloUsage(object):
         allo4.index.set_names(['crc', 'take_type', 'allo_block', 'date'], inplace=True)
         allo4.name = 'total_allo'
 
-        if self.irr_season:
-            dates1 = self.total_allo_ts.index.levels[3]
+        if self.irr_season and ('A' not in self.freq):
+            dates1 = allo4.index.levels[3]
             dates2 = dates1[dates1.month.isin([10, 11, 12, 1, 2, 3, 4])]
             allo4 = allo4.loc[(slice(None), slice(None), slice(None), dates2)]
 
@@ -140,9 +138,6 @@ class AlloUsage(object):
         Series
             indexed by crc, take_type, and allo_block
         """
-
-        if isinstance(self.groupby, str):
-            self.groupby = [self.groupby]
         if self.freq not in param.allo_type_dict:
             raise ValueError('freq must be one of ' + str(param.allo_type_dict))
 
@@ -151,13 +146,7 @@ class AlloUsage(object):
 
         ### Convert to GW and SW allocation
 
-        allo6 = self._sw_gw_split_allo()
-
-        ### Return groupby
-
-        allo7 = allo6.groupby(level=self.groupby).sum()
-
-        return allo7
+        self._sw_gw_split_allo()
 
 
     def _get_metered_allo_ts(self, restr_allo=False, proportion_allo=True):
@@ -169,27 +158,19 @@ class AlloUsage(object):
         ### Get the allocation ts either total or metered
         if restr_allo:
             if not hasattr(self, 'restr_allo_ts'):
-                allo1 = self._get_restr_allo_ts()
-            allo1 = self.restr_allo_ts.drop(['site', 'band_num', 'restr_ratio'], axis=1).copy().reset_index()
+                self._get_restr_allo_ts()
+            allo1 = self.restr_allo_ts.drop(['restr_ratio'], axis=1).copy().reset_index()
             rename_dict = {'sw_restr_allo': 'sw_metered_restr_allo', 'gw_restr_allo': 'gw_metered_restr_allo', 'total_restr_allo': 'total_metered_restr_allo'}
         else:
             if not hasattr(self, 'allo_ts'):
-                allo1 = self._get_allo_ts()
+                self._get_allo_ts()
             allo1 = self.allo_ts.copy().reset_index()
             rename_dict = {'sw_allo': 'sw_metered_allo', 'gw_allo': 'gw_metered_allo', 'total_allo': 'total_metered_allo'}
 
         ### Combine the usage data to the allo data
-        if hasattr(self, 'usage_crc_ts'):
-            allo2 = pd.merge(self.usage_crc_ts.reset_index()[['crc', 'take_type', 'allo_block', 'wap', 'date']], allo1, on=['crc', 'take_type', 'allo_block', 'wap', 'date'], how='right', indicator=True)
-        else:
-            if not hasattr(self, 'ts_usage_summ'):
-                self._usage_summ()
-            usage_waps = self.ts_usage_summ.wap.unique()
-
-            allo_wap = self.allo_wap.copy().reset_index()
-            allo_wap1 = allo_wap[allo_wap.wap.isin(usage_waps)].copy()
-
-            allo2 = pd.merge(allo_wap1[['crc', 'take_type', 'allo_block', 'wap']], allo1, on=['crc', 'take_type', 'allo_block', 'wap'], how='right', indicator=True)
+        if not hasattr(self, 'usage_crc_ts'):
+            self._get_usage_ts()
+        allo2 = pd.merge(self.usage_crc_ts.reset_index()[param.pk], allo1, on=param.pk, how='right', indicator=True)
 
         ## Re-categorise
         allo2['_merge'] = allo2._merge.cat.rename_categories({'left_only': 2, 'right_only': 0, 'both': 1}).astype(int)
@@ -204,16 +185,12 @@ class AlloUsage(object):
             allo3 = allo2.drop(['_merge', 'usage_waps'], axis=1).copy()
 
         allo3.rename(columns=rename_dict, inplace=True)
+        allo3.set_index(param.pk, inplace=True)
 
         if 'total_metered_allo' in allo3:
             setattr(self, 'metered_allo_ts', allo3)
         else:
             setattr(self, 'metered_restr_allo_ts', allo3)
-
-        allo4 = allo3.groupby(self.groupby).sum()
-
-#        setattr(self, 'metered_allo_ts', allo3)
-        return allo4
 
 
     def _process_usage(self):
@@ -234,8 +211,8 @@ class AlloUsage(object):
             tsdata1['DateTime'] = pd.to_datetime(tsdata1['DateTime'])
             tsdata1.rename(columns={'DateTime': 'date', 'ExtSiteID': 'wap', 'Value': 'total_usage'}, inplace=True)
 
-            ### filter - remove individual spikes
-            tsdata1[tsdata1['total_usage'] < 0 ] = 0
+            ### filter - remove individual spikes and negative values
+            tsdata1.loc[tsdata1['total_usage'] < 0, 'total_usage'] = 0
 
             def remove_spikes(x):
                 val1 = bool(x[1] > (x[0] + x[2] + 2))
@@ -249,7 +226,7 @@ class AlloUsage(object):
             setattr(self, 'usage_ts_daily', tsdata1)
 
         ### Aggregate
-        tsdata2 = util.grp_ts_agg(tsdata1, ['wap'], 'date', self.freq).sum()
+        tsdata2 = util.grp_ts_agg(tsdata1, 'wap', 'date', self.freq).sum()
 
         setattr(self, 'usage_ts', tsdata2)
 
@@ -275,7 +252,7 @@ class AlloUsage(object):
         usage1['total_usage'] = usage1['total_usage'] * usage1['combo_ratio']
 
         ### Remove high outliers
-        usage1.loc[usage1['total_usage'] > (usage1['total_allo'] * 1.8), 'total_usage'] = np.nan
+        usage1.loc[usage1['total_usage'] > (usage1['total_allo'] * 2), 'total_usage'] = np.nan
 
         ### Split the GW and SW components
         usage1['sw_ratio'] = usage1['sw_allo']/usage1['total_allo']
@@ -286,14 +263,9 @@ class AlloUsage(object):
 
         usage1.drop(['sw_allo', 'gw_allo', 'total_allo', 'combo_allo', 'combo_ratio', 'sw_ratio'], axis=1, inplace=True)
 
-        usage2 = usage1.dropna().set_index(['crc', 'take_type', 'allo_block', 'wap', 'date'])
+        usage2 = usage1.dropna().set_index(param.pk)
 
         setattr(self, 'usage_crc_ts', usage2)
-
-        ### Groupby
-        usage3 = usage2.groupby(level=self.groupby).sum()
-
-        return usage3
 
 
     def _lowflow_data(self):
@@ -303,23 +275,26 @@ class AlloUsage(object):
         if hasattr(self, 'lf_restr_daily'):
             lf_crc2 = self.lf_restr_daily
         else:
-            lf_band1 = mssql.rd_sql(self.server, param.database, param.lf_band_table, ['site', 'band_num', 'date', 'band_allo'], {'site_type': ['LowFlow']}, from_date=self.from_date, to_date=self.to_date, date_col='date')
+            ## Pull out the lowflows data
+            lf_crc1 = mssql.rd_sql(self.server, param.database, param.lf_band_crc_table, ['site', 'band_num', 'date', 'crc'], {'crc': self.allo.index.levels[0].tolist()}, from_date=self.from_date, to_date=self.to_date, date_col='date')
+            lf_crc1['date'] = pd.to_datetime(lf_crc1['date'])
+
+            lf_band1 = mssql.rd_sql(self.server, param.database, param.lf_band_table, ['site', 'band_num', 'date', 'band_allo'], {'site_type': ['LowFlow'], 'site': lf_crc1.site.unique().tolist(), 'band_num': lf_crc1.band_num.unique().tolist()}, from_date=self.from_date, to_date=self.to_date, date_col='date')
             lf_band1['date'] = pd.to_datetime(lf_band1['date'])
             lf_band1.loc[lf_band1.band_allo > 100, 'band_allo'] = 100
 
-            lf_crc1 = mssql.rd_sql(self.server, param.database, param.lf_band_crc_table, ['site', 'band_num', 'date', 'crc'],  from_date=self.from_date, to_date=self.to_date, date_col='date')
-            lf_crc1['date'] = pd.to_datetime(lf_crc1['date'])
+            lf_crc1a = pd.merge(lf_crc1, lf_band1, on=['site', 'band_num', 'date'])
+            setattr(self, 'lf_restr_daily_all', lf_crc1a)
 
-            lf_crc2 = pd.merge(lf_crc1, lf_band1, on=['site', 'band_num', 'date'])
+            ## Aggregate to the crc and date - min restr ratio
+            lf_crc2 = util.grp_ts_agg(lf_crc1a, 'crc', 'date', 'D')['band_allo'].min() * 0.01
+            lf_crc2.name = 'restr_ratio'
             setattr(self, 'lf_restr_daily', lf_crc2)
 
-        lf_crc3 = util.grp_ts_agg(lf_crc2, ['crc', 'site', 'band_num'], 'date', self.freq)['band_allo'].mean() * 0.01
-        lf_crc3.name = 'restr_ratio'
+        ### Aggregate to the appropriate freq
+        lf_crc3 = util.grp_ts_agg(lf_crc2.reset_index(), 'crc', 'date', self.freq)['restr_ratio'].mean()
 
-        lf_crc4 = lf_crc3.sort_values().reset_index()
-        lf_crc5 = lf_crc4.groupby(['crc', 'date']).first()
-
-        setattr(self, 'lf_restr', lf_crc5)
+        setattr(self, 'lf_restr', lf_crc3)
 
 
     def _get_restr_allo_ts(self):
@@ -345,13 +320,9 @@ class AlloUsage(object):
         allo2['gw_restr_allo'] = allo2['gw_restr_allo'] * allo2['restr_ratio']
         allo2['total_restr_allo'] = allo2['total_restr_allo'] * allo2['restr_ratio']
 
-        allo2.set_index(['crc', 'take_type', 'allo_block', 'wap', 'date'], inplace=True)
+        allo2.set_index(param.pk, inplace=True)
 
         setattr(self, 'restr_allo_ts', allo2)
-
-        allo3 = allo2.groupby(level=self.groupby)[['sw_restr_allo', 'gw_restr_allo', 'total_restr_allo']].sum()
-
-        return allo3
 
 
     def get_ts(self, datasets, freq, groupby, sd_days=150, irr_season=False):
@@ -363,24 +334,20 @@ class AlloUsage(object):
             raise ValueError('datasets must be a list that includes one or more of ' + str(self.dataset_types))
 
         ### Check new to old parameters and remove attributes if necessary
+        if 'A' in freq:
+            freq_agg = freq
+            freq = 'M'
+        else:
+            freq_agg = freq
+
         if hasattr(self, 'freq'):
-            if (self.freq != freq) or (self.groupby != groupby) or (self.sd_days != sd_days) or (self.irr_season != irr_season):
-                delattr(self, 'allo_ts')
-                delattr(self, 'total_allo_ts')
-                if hasattr(self, 'restr_allo_ts'):
-                    delattr(self, 'restr_allo_ts')
-                if hasattr(self, 'lf_restr'):
-                    delattr(self, 'lf_restr')
-                if hasattr(self, 'usage_crc_ts'):
-                    delattr(self, 'usage_crc_ts')
-                if hasattr(self, 'usage_ts'):
-                    delattr(self, 'usage_ts')
-                if hasattr(self, 'usage_ts'):
-                    delattr(self, 'usage_ts')
+            if (self.freq != freq) or (self.sd_days != sd_days) or (self.irr_season != irr_season):
+                for d in param.temp_datasets:
+                    if hasattr(self, d):
+                        delattr(self, d)
 
         ### Assign pararameters
         setattr(self, 'freq', freq)
-        setattr(self, 'groupby', groupby)
         setattr(self, 'sd_days', sd_days)
         setattr(self, 'irr_season', irr_season)
 
@@ -388,37 +355,55 @@ class AlloUsage(object):
         all1 = []
 
         if 'allo' in datasets:
-            allo1 = self._get_allo_ts()
-            all1.append(allo1)
+            self._get_allo_ts()
+            all1.append(self.allo_ts)
         if 'metered_allo' in datasets:
-            metered_allo1 = self._get_metered_allo_ts()
-            all1.append(metered_allo1)
+            self._get_metered_allo_ts()
+            all1.append(self.metered_allo_ts)
         if 'restr_allo' in datasets:
-            restr_allo1 = self._get_restr_allo_ts()
-            all1.append(restr_allo1)
+            self._get_restr_allo_ts()
+            all1.append(self.restr_allo_ts)
         if 'metered_restr_allo' in datasets:
-            restr_allo2 = self._get_metered_allo_ts(True)
-            all1.append(restr_allo2)
+            self._get_metered_allo_ts(True)
+            all1.append(self.metered_restr_allo_ts)
         if 'usage' in datasets:
-            usage1 = self._get_usage_ts()
-            all1.append(usage1)
+            self._get_usage_ts()
+            all1.append(self.usage_crc_ts)
+
+        if 'A' in freq_agg:
+            all2 = util.grp_ts_agg(pd.concat(all1, axis=1).reset_index(), ['crc', 'take_type', 'allo_block', 'wap'], 'date', freq_agg).sum().reset_index()
+        else:
+            all2 = pd.concat(all1, axis=1).reset_index()
+
+        if not np.in1d(groupby, param.pk).all():
+            all2 = self.merge_extra(all2, groupby)
+
+        all3 = all2.groupby(groupby).sum()
+
+        return all3
 
 
-        all2 = pd.concat(all1, axis=1)
+    def merge_extra(self, data, cols):
+        """
 
-        return all2
+        """
+        sites_col = [c for c in cols if c in self.sites.columns]
+        allo_col = [c for c in cols if c in self.allo.columns]
 
+        data1 = data.copy()
 
+        if sites_col:
+            all_sites_col = ['wap']
+            all_sites_col.extend(sites_col)
+            data1 = pd.merge(data1, self.sites.reset_index()[all_sites_col], on='wap')
+        if allo_col:
+            all_allo_col = ['crc', 'take_type', 'allo_block']
+            all_allo_col.extend(allo_col)
+            data1 = pd.merge(data1, self.allo.reset_index()[all_allo_col], on=['crc', 'take_type', 'allo_block'])
 
+        data1.set_index(param.pk, inplace=True)
 
-
-
-
-
-
-
-
-
+        return data1
 
 
 

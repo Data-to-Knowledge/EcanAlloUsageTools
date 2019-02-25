@@ -80,18 +80,18 @@ def allo_filter(server, from_date=None, to_date=None, site_filter=None, crc_filt
         Representing the filters on the ExternalSites, CrcAllo, and CrcWapAllo
     """
     ### ExternalSite
-    site_cols = ['ExtSiteID', 'NZTMX', 'NZTMY']
+    site_cols = param.site_cols.copy()
     if isinstance(site_filter, dict):
-        extra_site_cols = list(site_filter.keys())
-        site_cols.extend(extra_site_cols)
+        extra_site_cols = set(site_filter.keys())
+        site_cols.update(extra_site_cols)
     elif isinstance(site_filter, list):
-        site_cols.extend(site_filter)
+        site_cols.update(set(site_filter))
         site_filter = None
-    sites = mssql.rd_sql(server, param.database, param.site_table, site_cols, site_filter)
+    sites = mssql.rd_sql(server, param.database, param.site_table, list(site_cols), site_filter)
     sites1 = sites[sites.ExtSiteID.str.contains('[A-Z]+\d\d/\d+')].copy()
 
     ### CrcWapAllo
-    crc_wap_cols = set(['crc', 'take_type', 'allo_block', 'wap', 'max_rate_wap', 'in_sw_allo', 'sd1_7', 'sd1_30', 'sd1_150'])
+    crc_wap_cols = param.crc_wap_cols.copy()
     if isinstance(crc_wap_filter, dict):
         extra_crc_wap_cols = set(crc_wap_filter.keys())
         crc_wap_cols.update(extra_crc_wap_cols)
@@ -102,7 +102,7 @@ def allo_filter(server, from_date=None, to_date=None, site_filter=None, crc_filt
     crc_wap1 = crc_wap[crc_wap.wap.isin(sites1.ExtSiteID)]
 
     ### CrcAllo
-    crc_cols = set(['crc', 'take_type', 'allo_block', 'max_rate_crc', 'daily_vol', 'feav', 'crc_status', 'from_date', 'to_date', 'from_month', 'to_month', 'in_gw_allo', 'use_type'])
+    crc_cols = param.crc_cols.copy()
     if isinstance(crc_filter, dict):
         extra_crc_cols = set(crc_filter.keys())
         crc_cols.update(extra_crc_cols)

@@ -34,12 +34,18 @@ freq_codes = ['D', 'W', 'M', 'A-JUN']
 
 dataset_types = ['allo', 'metered_allo', 'restr_allo', 'metered_restr_allo', 'usage']
 
+pk = ['crc', 'take_type', 'allo_block', 'wap', 'date']
+
+crc_wap_cols = set(['crc', 'take_type', 'allo_block', 'wap', 'max_rate_wap', 'in_sw_allo', 'sd1_7', 'sd1_30', 'sd1_150'])
+
+crc_cols = set(['crc', 'take_type', 'allo_block', 'max_rate_crc', 'daily_vol', 'feav', 'crc_status', 'from_date', 'to_date', 'from_month', 'to_month', 'in_gw_allo', 'use_type'])
+
+site_cols = set(['ExtSiteID', 'ExtSiteName', 'NZTMX', 'NZTMY', 'CatchmentName', 'CatchmentNumber', 'CatchmentGroupName', 'CatchmentGroupNumber', 'SwazName', 'SwazGroupName', 'SwazSubRegionalName', 'GwazName', 'CwmsName'])
 
 
+temp_datasets = ['allo_ts', 'total_allo_ts', 'restr_allo_ts', 'lf_restr', 'usage_crc_ts', 'usage_ts', 'usage_crc_ts', 'metered_allo_ts', 'metered_restr_allo_ts']
 
-
-
-
+#datasets = {'allo': ['total_allo', 'sw_allo', 'gw_allo'],
 
 
 

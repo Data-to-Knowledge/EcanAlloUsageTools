@@ -96,9 +96,9 @@ a1 = AlloUsage(from_date, to_date, site_filter=site_filter)
 
 ts1 = a1.get_ts(datasets, freq, cols, irr_season=True)
 
-a1.plot_group(export_path=r'E:\ecan\local\Projects\requests\suz\2018-12-17\plots')
+a1.plot_group('A-JUN', val='gw', with_restr=True, export_path=r'E:\ecan\local\Projects\requests\suz\2018-12-17\plots')
 
-
+a1.plot_stacked('A-JUN', val='total', export_path=r'E:\ecan\local\Projects\requests\suz\2018-12-17\plots')
 
 
 

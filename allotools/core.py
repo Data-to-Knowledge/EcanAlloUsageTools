@@ -10,7 +10,8 @@ from pdsql import mssql
 import filters
 #from allotools.allocation_ts import allo_ts_apply
 from allocation_ts import allo_ts_apply
-from plot import plot_group_yr as pg
+from plot import plot_group as pg
+from plot import plot_stacked as ps
 #import allotools.parameters as param
 import parameters as param
 from datetime import datetime
@@ -24,6 +25,7 @@ class AlloUsage(object):
 
     dataset_types = param.dataset_types
     plot_group = pg
+    plot_stacked = ps
 
     ### Initial import and assignment function
     def __init__(self, from_date=None, to_date=None, site_filter=None, crc_filter=None, crc_wap_filter=None, in_allo=True, include_hydroelectric=False):

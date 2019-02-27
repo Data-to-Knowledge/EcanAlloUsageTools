@@ -4,7 +4,7 @@ Created on Mon Feb 18 09:13:34 2019
 
 @author: michaelek
 """
-
+import os
 from allotools import AlloUsage
 from pdsql import mssql
 
@@ -19,6 +19,8 @@ sites_table = 'ExternalSite'
 catch_group = ['Ashburton River']
 summ_col = 'SwazName'
 
+waitaki = {'CatchmentGroupName': ['Waitaki']}
+
 crc_filter = {'use_type': ['stockwater', 'irrigation']}
 
 from_date = '2015-07-01'
@@ -28,7 +30,7 @@ datasets = ['allo', 'restr_allo', 'metered_allo', 'metered_restr_allo', 'usage']
 datasets = ['allo', 'metered_allo', 'usage']
 
 freq = 'A-JUN'
-freq = 'M'
+#freq = 'M'
 
 t1 = 'CRC012123'
 t2 = 'Pendarves Area'
@@ -36,6 +38,9 @@ t2 = 'Pendarves Area'
 t3 = 'CRC011245'
 
 cols = ['SwazName', 'use_type', 'date']
+
+export_path = r'E:\ecan\local\Projects\requests\Ilja\2019-02-27'
+
 
 ########################################
 ### Test 1
@@ -96,13 +101,16 @@ a1 = AlloUsage(from_date, to_date, site_filter=site_filter)
 
 ts1 = a1.get_ts(datasets, freq, cols, irr_season=True)
 
-a1.plot_group('A-JUN', val='gw', with_restr=True, export_path=r'E:\ecan\local\Projects\requests\suz\2018-12-17\plots')
+a1.plot_group('A-JUN', val='total', with_restr=True, export_path=r'E:\ecan\local\Projects\requests\suz\2018-12-17\plots')
 
 a1.plot_stacked('A-JUN', val='total', export_path=r'E:\ecan\local\Projects\requests\suz\2018-12-17\plots')
 
+### Test 5
+a1 = AlloUsage(from_date, to_date, site_filter=waitaki)
 
+a1.allo.to_csv(os.path.join(export_path, 'waitaki_allo_2019-02-27.csv'))
 
-
+a1.allo_wap.to_csv(os.path.join(export_path, 'waitaki_allo_wap_2019-02-27.csv'))
 
 
 

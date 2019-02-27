@@ -8,11 +8,9 @@ import numpy as np
 import pandas as pd
 from pdsql import mssql
 from allotools import filters
-#from allotools.allocation_ts import allo_ts_apply
 from allotools.allocation_ts import allo_ts_apply
 from allotools.plot import plot_group as pg
 from allotools.plot import plot_stacked as ps
-#import allotools.parameters as param
 import allotools.parameters as param
 from datetime import datetime
 from allotools import util
@@ -33,13 +31,25 @@ class AlloUsage(object):
 
         Parameters
         ----------
-
-        sd_days : int
-            The stream depletion effect on groundwater takes. The value is the number of days of pumping. Accepted values are 7, 30, and 150.
+        from_date : str or None
+            The start date of the consent and the final time series. In the form of '2000-01-01'. None will return all consents and subsequently all dates.
+        to_date : str or None
+            The end date of the consent and the final time series. In the form of '2000-01-01'. None will return all consents and subsequently all dates.
+        site_filter : dict
+            A dict in the form of {str: [values]} to select specific values from a specific column in the ExternalSite table.
+        crc_filter : dict
+            A dict in the form of {str: [values]} to select specific values from a specific column in the CrcAllo table.
+        crc_wap_filter : dict
+            A dict in the form of {str: [values]} to select specific values from a specific column in the CrcWapAllo table.
+        in_allo : bool
+            Should only the consumptive takes be included?
+        include_hydroelectric : bool
+            Should hydroelectric takes be included?
 
         Returns
         -------
-
+        AlloUsage object
+            with all of the base sites, allo, and allo_wap DataFrames
 
         """
         sites, allo, allo_wap = filters.allo_filter(param.server, from_date, to_date, site_filter, crc_filter, crc_wap_filter, in_allo, include_hydroelectric)
@@ -128,17 +138,6 @@ class AlloUsage(object):
         """
         Function to create an allocation time series.
 
-        Parameters
-        ----------
-        freq : str
-            Pandas frequency str. Must be 'D', 'W', 'M', 'A-JUN', or 'A'.
-        groupby : str or list of str
-            A list of the combination of fields that the output should be aggregated to. Possible fields include: 'crc', 'take_type', 'allo_block', 'date', and 'wap'. Being a time series function, you should always add 'date' to the groupby.
-
-        Returns
-        -------
-        Series
-            indexed by crc, take_type, and allo_block
         """
         if self.freq not in param.allo_type_dict:
             raise ValueError('freq must be one of ' + str(param.allo_type_dict))
@@ -233,7 +232,7 @@ class AlloUsage(object):
         setattr(self, 'usage_ts', tsdata2)
 
 
-    def _get_usage_ts(self):
+    def _get_usage_ts(self, usage_allo_ratio=2):
         """
 
         """
@@ -254,7 +253,7 @@ class AlloUsage(object):
         usage1['total_usage'] = usage1['total_usage'] * usage1['combo_ratio']
 
         ### Remove high outliers
-        usage1.loc[usage1['total_usage'] > (usage1['total_allo'] * 2), 'total_usage'] = np.nan
+        usage1.loc[usage1['total_usage'] > (usage1['total_allo'] * usage_allo_ratio), 'total_usage'] = np.nan
 
         ### Split the GW and SW components
         usage1['sw_ratio'] = usage1['sw_allo']/usage1['total_allo']
@@ -327,9 +326,29 @@ class AlloUsage(object):
         setattr(self, 'restr_allo_ts', allo2)
 
 
-    def get_ts(self, datasets, freq, groupby, sd_days=150, irr_season=False):
+    def get_ts(self, datasets, freq, groupby, sd_days=150, irr_season=False, usage_allo_ratio=2):
         """
+        Function to create a time series of allocation and usage.
 
+        Parameters
+        ----------
+        datasets : list of str
+            The dataset types to be returned. Must be one or more of {ds}.
+        freq : str
+            Pandas time frequency code for the time interval. Must be one of 'D', 'W', 'M', 'A', or 'A-JUN'.
+        groupby : list of str
+            The fields that should grouped by when returned. Can be any variety of fields including crc, take_type, allo_block, 'wap', CatchmentGroupName, etc. Date will always be included as part of the output group, so it doesn't need to be specified in the groupby.
+        sd_days : int
+            The stream depletion days for the groundwater to surface water rationing. Must be one of 7, 30, or 150.
+        irr_season : bool
+            Should the calculations and the resulting time series be only over the irrigation season? The irrigation season is from October through to the end of April.
+        usage_allo_ratio : int or float
+            The cut off ratio of usage/allocation. Any usage above this ratio will be removed from the results (subsequently reducing the metered allocation).
+
+        Results
+        -------
+        DataFrame
+            Indexed by the groupby (and date)
         """
         ### Check the dataset types
         if not np.in1d(datasets, self.dataset_types).all():
@@ -369,7 +388,7 @@ class AlloUsage(object):
             self._get_metered_allo_ts(True)
             all1.append(self.metered_restr_allo_ts)
         if 'usage' in datasets:
-            self._get_usage_ts()
+            self._get_usage_ts(usage_allo_ratio)
             all1.append(self.usage_crc_ts)
 
         if 'A' in freq_agg:
@@ -406,9 +425,4 @@ class AlloUsage(object):
         data1.set_index(param.pk, inplace=True)
 
         return data1
-
-
-
-
-AlloUsage.__doc__ = filters.allo_filter.__doc__
 

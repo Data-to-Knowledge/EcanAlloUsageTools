@@ -350,6 +350,10 @@ class AlloUsage(object):
         DataFrame
             Indexed by the groupby (and date)
         """
+        ### Add in date to groupby if it's not there
+        if not 'date' in groupby:
+            groupby.append('date')
+
         ### Check the dataset types
         if not np.in1d(datasets, self.dataset_types).all():
             raise ValueError('datasets must be a list that includes one or more of ' + str(self.dataset_types))

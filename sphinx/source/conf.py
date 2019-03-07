@@ -19,7 +19,7 @@
 #
 import os
 import sys
-import hilltoppy
+import EcanAlloUsageTools
 
 project_name = 'EcanAlloUsageTools'
 

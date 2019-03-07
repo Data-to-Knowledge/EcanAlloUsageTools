@@ -19,7 +19,7 @@
 #
 import os
 import sys
-import EcanAlloUsageTools
+import allotools
 
 project_name = 'EcanAlloUsageTools'
 

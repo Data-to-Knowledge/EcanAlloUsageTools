@@ -21,7 +21,7 @@ import os
 import sys
 import hilltoppy
 
-project_name = 'hilltop-py'
+project_name = 'EcanAlloUsageTools'
 
 # !! These do not work when reading files with IPython !!
 # The data files needs to be located at the root of the repository
@@ -60,8 +60,8 @@ extensions = [
     'numpydoc',
 
     # IPython console
-    'IPython.sphinxext.ipython_console_highlighting',
-    'IPython.sphinxext.ipython_directive'
+    # 'IPython.sphinxext.ipython_console_highlighting',
+    # 'IPython.sphinxext.ipython_directive'
 
     # Enable Google Analytics ( requires: https://pypi.python.org/pypi/sphinxcontrib-googleanalytics )
     #'sphinxcontrib.googleanalytics',
@@ -113,7 +113,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = project_name
-copyright = '2018 Mike Kittridge'
+copyright = '2019 Mike Kittridge'
 author = 'Mike Kittridge'
 
 # The version info for the project you're documenting, acts as replacement for

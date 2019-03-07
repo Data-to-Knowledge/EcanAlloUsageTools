@@ -1,46 +1,28 @@
 Package References
 ===================
 
-COM module
+Base class
 --------------
 
-.. autofunction:: hilltoppy.com.makepy_hilltop
+.. autoclass:: allotools.AlloUsage
 
-.. autofunction:: hilltoppy.com.measurement_list
+Get the time series data
+--------------------
 
-.. autofunction:: hilltoppy.com.get_data_quantity
+.. automethod:: allotools.get_ts
 
-.. autofunction:: hilltoppy.com.get_data_quality
-
-Native Hilltop Python module
----------------------------
-
-.. autofunction:: hilltoppy.hilltop.site_list
-
-.. autofunction:: hilltoppy.hilltop.measurement_list
-
-.. autofunction:: hilltoppy.hilltop.get_data
-
-Web service
+plotting methods
 ---------------
 
-.. autofunction:: hilltoppy.web_service.build_url
+.. automethod:: allotools.plot_group
 
-.. autofunction:: hilltoppy.web_service.site_list
-
-.. autofunction:: hilltoppy.web_service.measurement_list
-
-.. autofunction:: hilltoppy.web_service.measurement_list_all
-
-.. autofunction:: hilltoppy.web_service.get_data
-
-.. autofunction:: hilltoppy.web_service.wq_sample_parameter_list
+.. automethod:: allotools.plot_stacked
 
 
 API Pages
 ---------
 
-.. currentmodule:: hilltoppy
+.. currentmodule:: allotools
 .. autosummary::
   :template: autosummary.rst
   :toctree: package_references/

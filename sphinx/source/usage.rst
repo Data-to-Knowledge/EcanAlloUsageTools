@@ -1,135 +1,48 @@
-How to use hilltop-py
-=====================
+How to use EcanAlloUsageTools
+=============================
 
-This section will describe how to use the hilltop-py package. The functions depend heavily on the Pandas package. Nearly all outputs are either as Pandas Series or DataFrames.
+This section will describe how to use the EcanAlloUsageTools package. Nearly all result outputs are Pandas DataFrames.
 
-Some of this documentation comes from the "Scripting.doc" file. Please look at that doc for more details about the internals.
-
-COM module
-------------
-The following documentation describes how to set up and use the COM module functions.
-
-Install pywin32
-~~~~~~~~~~~~~~~
-pywin32 does not come installed by default. Install it like any other python package before continuing.
-
-.. code::
-
-  conda install pywin32
-
-
-Register Hydrolib
-~~~~~~~~~~~~~~~~~
-Hilltop Manager needs to be added into the Windows registry. This can be done for either the 32bit or the 64bit versions of Hilltop Manager, but if you have the choice pick the 64bit version in case you need to handle very large datasets. Find either version of Hilltop Manager,  and open the program (called Manager.exe). Load in an hts file (this allows you to access the configuration menus). Go to the tab called ‘Configure’ then go to ‘installation’. It will ask you if you want Hilltop registered, and of course say yes.
-
-Run makepy_hilltop
-~~~~~~~~~~~~~~~~~~
-The COM utility must be built for hilltop to access it's functions. This is all wrapped in a single function. Once Hydrolib is properly registered, run makepy_hilltop without any parameters and you should be ready to use the COM functions.
-
-.. code-block:: python
-
-  from hilltoppy import com
-
-  com.makepy_hilltop()
-
-
-Data access
-~~~~~~~~~~~
-The function names are based on the associated Hilltop function names. Since functionally, accessing quantity data is quite different (from the COM) as compared to the quality data, there are two functions accessing the time series data.
-
-.. code-block:: python
-
-  from hilltoppy import com
-
-  hts = r'\\path\to\file.hts'
-  sites = ['site1', 'site2']
-  mtypes = ['Total Suspended Solids']
-
-  meas_df = com.measurement_list(hts, sites)
-
-  tsdata = com.get_data_quality(hts, sites, mtypes)
-  print(tsdata)
-
-Native Python module
+Get time series data
 --------------------
-The following documentation describes how to set up and use the module functions built upon the native python module.
+The most common use case is to extract a variety of time series data in the form of allocation, metered allocation, lowflow restricted allocation, lowflow restricted metered allocation, and usage datasets. All numeric results returned have the units of m^3.
 
-Python path to Hilltop.pyd
-~~~~~~~~~~~~~~~~~~~~~~~~~~
-First, make sure that the Hilltop.pyd exists in either the root directory of the Hilltop directory or in the x64 directory (depending on your python installation). Open manager.exe, go to configure, and click on Python. It simply adds the Python path to the windows environment variables so that Python knows where to load the Hilltop.pyd from. This can also be modified from within Spyder or the sys module.
+First, you will need to know which of the above datasets you want.
+The associated dataset codes are the following:
+allocation = allo
+metered allocation = metered_allo
+lowflow restricted allocation = restr_allo
+lowflow restricted metered allocation = metered_restr_allo
+usage = usage
 
-Data access
-~~~~~~~~~~~
-The function names are similar to the COM module except that one function covers both quantity and quality data.
+Please see :doc:`package_references` for all possible input parameters and filters.
 
-.. code-block:: python
-
-  from hilltoppy import hilltop
-
-  hts = r'\\path\to\file.hts'
-  sites = ['site1', 'site2']
-  mtypes = ['Total Suspended Solids']
-
-  sites_out = hilltop.site_list(hts)
-
-  meas_df = hilltop.measurement_list(hts, sites)
-
-  tsdata = hilltop.get_data(hts, sites, mtypes)
-  print(tsdata)
-
-
-Web service
------------
-The web service calls are simpler and more straightforward. No extra setup is needed other than already having a Hilltop server to query. See the doc called "server.doc" for more details about the web service calls.
-
-Data access
-~~~~~~~~~~~
-The function names are the same, although the input parameters are slightly different. There is also an additional function specific to water quality samples. Below is an actual working example!
+Example:
 
 .. code:: python
 
-    from hilltoppy import web_service as ws
+  import pandas as pd
+  from allotools import AlloUsage
 
-    base_url = 'http://wateruse.ecan.govt.nz'
-    hts = 'WQAll.hts'
-    site = 'BV24/0024'
-    measurement = 'Nitrate Nitrogen'
-    from_date = '2015-01-01'
-    to_date = '2017-01-01'
+  pd.options.display.max_columns = 10
 
-.. ipython:: python
-   :suppress:
+  # Parameters
+  from_date = '2015-07-01'
+  to_date = '2018-06-30'
 
-   from hilltoppy import web_service as ws
+  datasets = ['allo', 'restr_allo', 'metered_allo', 'metered_restr_allo', 'usage']
+  freq = 'A-JUN'
+  groupby = ['crc', 'wap', 'date']
+  site_filter = {'CatchmentGroupName': ['Ashburton River']}
 
-   base_url = 'http://wateruse.ecan.govt.nz'
-   hts = 'WQAll.hts'
-   site = 'BV24/0024'
-   measurement = 'Nitrate Nitrogen'
-   from_date = '2015-01-01'
-   to_date = '2017-01-01'
+  export_path = r'E:\allousagetest'
 
-.. ipython:: python
+  # Time series extraction
+  a1 = AlloUsage(from_date, to_date, site_filter=site_filter)
 
-  sites_out = ws.site_list(base_url, hts)
-  sites_out[1:10]
+  ts1 = a1.get_ts(datasets, freq, groupby, usage_allo_ratio=10).round()
 
-  meas_df = ws.measurement_list(base_url, hts, site)
-  meas_df.head()
+  # Plotting
+  a1.plot_group('A-JUN', val='total', group='crc', with_restr=True, export_path=export_path)
 
-  tsdata = ws.get_data(base_url, hts, site, measurement, from_date=from_date, to_date=to_date)
-  tsdata.head()
-
-  tsdata2, extra2 = ws.get_data(base_url, hts, site, measurement, parameters=True)
-  tsdata2.head()
-  extra2.head()
-
-  tsdata3 = ws.get_data(base_url, hts, site, 'WQ Sample')
-  tsdata3.head()
-
-  wq_sample_df = ws.wq_sample_parameter_list(base_url, hts, site)
-  wq_sample_df.head()
-
-  # For debugging purposes - copy-paste output into internet browser
-  url = ws.build_url(base_url, hts, 'MeasurementList', site)
-  print(url)
+  a1.plot_stacked('A-JUN', val='total', export_path=export_path)

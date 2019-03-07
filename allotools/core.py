@@ -401,14 +401,14 @@ class AlloUsage(object):
             all2 = pd.concat(all1, axis=1).reset_index()
 
         if not np.in1d(groupby, param.pk).all():
-            all2 = self.merge_extra(all2, groupby)
+            all2 = self._merge_extra(all2, groupby)
 
         all3 = all2.groupby(groupby).sum()
 
         return all3
 
 
-    def merge_extra(self, data, cols):
+    def _merge_extra(self, data, cols):
         """
 
         """

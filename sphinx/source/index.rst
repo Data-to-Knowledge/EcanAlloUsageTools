@@ -1,16 +1,12 @@
-hilltop-py - Hilltop Python tools
-==================================
-This package contains a variety of Python functions for accessing data contained in `Hilltop <http://www.hilltop.co.nz/>`_.
-You must have the Hilltop software to use this package.
+EcanAlloUsageTools - tools for extracting and integrating ECan allocation and usage data
+============================================================================================
+This package contains a core class (AlloUsage) that provides a variety of methods to extract and combine allocation and usage data.
+It is primarily designed to return the allocation and usage data as a time series over a period of time in the past.
 
-There are three different modules to access Hilltop data:
-  - Windows COM objects
-  - Native Hilltop Python package
-  - Hilltop web server
+At the moment, these tools are only usable from within the ECan network. A future installment will optionally utilize external facing web service calls once they have been established.
 
-The recommended module is the web server as it is much easier to debug than the other two. Nevertheless, the other two modules should work with one sometimes being more preferable than another under certain circumstances. Try them out and provide feedback on the `GitHub page <https://github.com/mullenkamp/hilltop-py>`_ to improve the package!
-
-The GitHub repository is found `here <https://github.com/mullenkamp/hilltop-py>`_.
+The GitHub repository is found `here <https://github.com/mullenkamp/EcanAlloUsageTools>`_.
+Feedback and contributions are welcome.
 
 .. toctree::
    :maxdepth: 2

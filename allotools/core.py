@@ -20,6 +20,32 @@ from allotools import util
 
 
 class AlloUsage(object):
+    """
+    Class to to process the allocation and usage data at ECan.
+
+    Parameters
+    ----------
+    from_date : str or None
+        The start date of the consent and the final time series. In the form of '2000-01-01'. None will return all consents and subsequently all dates.
+    to_date : str or None
+        The end date of the consent and the final time series. In the form of '2000-01-01'. None will return all consents and subsequently all dates.
+    site_filter : dict
+        A dict in the form of {str: [values]} to select specific values from a specific column in the ExternalSite table.
+    crc_filter : dict
+        A dict in the form of {str: [values]} to select specific values from a specific column in the CrcAllo table.
+    crc_wap_filter : dict
+        A dict in the form of {str: [values]} to select specific values from a specific column in the CrcWapAllo table.
+    in_allo : bool
+        Should only the consumptive takes be included?
+    include_hydroelectric : bool
+        Should hydroelectric takes be included?
+
+    Returns
+    -------
+    AlloUsage object
+        with all of the base sites, allo, and allo_wap DataFrames
+
+    """
 
     dataset_types = param.dataset_types
     plot_group = pg

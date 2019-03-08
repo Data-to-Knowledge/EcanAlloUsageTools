@@ -9,14 +9,14 @@ Base class
 Get the time series data
 --------------------
 
-.. automethod:: allotools.get_ts
+.. automethod:: allotools.AlloUsage.get_ts
 
 plotting methods
 ---------------
 
-.. automethod:: allotools.plot_group
+.. automethod:: allotools.AlloUsage.plot_group
 
-.. automethod:: allotools.plot_stacked
+.. automethod:: allotools.AlloUsage.plot_stacked
 
 
 API Pages

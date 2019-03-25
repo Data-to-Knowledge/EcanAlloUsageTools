@@ -99,6 +99,7 @@ def plot_group(self, freq, val='total', group='SwazName', with_restr=True, yaxis
 
             if with_restr:
                 allo_up_all = pd.melt(set1, id_vars='date', value_vars=list(vol_names.values()), var_name='up_allo')
+                allo_up_all.loc[allo_up_all.up_allo.str.contains('usage'), 'up_allo'] = 'unused'
                 allo_up_all.loc[allo_up_all.up_allo.str.contains('usage'), 'value'] = 0
                 sns.barplot(x=index1, y='value', hue='up_allo', data=allo_up_all, palette=col_pal1, edgecolor='0', hatch='/')
             plt.ylabel('Water Volume $(' + yaxis_lab + '\; m^{3}/year$)')
@@ -107,7 +108,7 @@ def plot_group(self, freq, val='total', group='SwazName', with_restr=True, yaxis
             # Legend
             handles, lbs = ax.get_legend_handles_labels()
             order1 = [lbs.index(j) for j in label_names if j in lbs]
-            labels = [label_names[i] for i in lbs]
+            labels = [label_names[lbs[i]] for i in order1 if lbs[i] in label_names]
             plt.legend([handles[i] for i in order1], labels, loc='upper left')
     #        leg1.legendPatch.set_path_effects(pathe.withStroke(linewidth=5, foreground="w"))
 

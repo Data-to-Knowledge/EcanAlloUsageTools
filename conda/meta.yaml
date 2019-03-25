@@ -1,6 +1,6 @@
 {% set name = "EcanAlloUsageTools" %}
-{% set version = "0.1.7" %}
-{% set sha256 = "132900f392de8e3a405d2a2cc860099d089c671c12bba81e664327c5666d8e19" %}
+{% set version = "0.1.8" %}
+{% set sha256 = "acc1c6f68b423c76362a54adaa639fdbad9ba568bbaed9c3b2e6072a21da51f8" %}
 
 # sha256 is the prefered checksum -- you can get it for a file with:
 #  `openssl sha256 <file name>`.

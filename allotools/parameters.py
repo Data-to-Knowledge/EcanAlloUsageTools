@@ -8,7 +8,7 @@ Created on Tue Oct  2 13:17:03 2018
 #####################################
 ### Misc parameters for the various functions
 
-server = 'sql2012test01'
+server = 'edwprod01'
 database = 'hydro'
 allo_table = 'CrcAllo'
 wap_allo_table = 'CrcWapAllo'

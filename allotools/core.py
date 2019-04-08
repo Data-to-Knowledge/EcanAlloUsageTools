@@ -50,6 +50,7 @@ class AlloUsage(object):
     dataset_types = param.dataset_types
     plot_group = pg
     plot_stacked = ps
+    server = param.server
 
     ### Initial import and assignment function
     def __init__(self, from_date=None, to_date=None, site_filter=None, crc_filter=None, crc_wap_filter=None, in_allo=True, include_hydroelectric=False):
@@ -78,7 +79,7 @@ class AlloUsage(object):
             with all of the base sites, allo, and allo_wap DataFrames
 
         """
-        sites, allo, allo_wap = filters.allo_filter(param.server, from_date, to_date, site_filter, crc_filter, crc_wap_filter, in_allo, include_hydroelectric)
+        sites, allo, allo_wap = filters.allo_filter(self.server, from_date, to_date, site_filter, crc_filter, crc_wap_filter, in_allo, include_hydroelectric)
         sites.index.name = 'wap'
 
         setattr(self, 'sites', sites)
@@ -93,7 +94,7 @@ class AlloUsage(object):
         allo_wap.loc[(allo_wap.take_type == 'Take Surface Water'), ['sd1_7', 'sd1_30', 'sd1_150']] = 100
         allo_wap.set_index(['crc', 'take_type', 'allo_block', 'wap'], inplace=True)
         setattr(self, 'allo_wap', allo_wap.drop('tot_rate', axis=1))
-        setattr(self, 'server', param.server)
+        setattr(self, 'server', self.server)
         if from_date is None:
             from_date = '1900-01-01'
         if to_date is None:

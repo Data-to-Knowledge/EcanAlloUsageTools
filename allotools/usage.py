@@ -10,11 +10,3 @@ from allotools.filters import allo_filter
 
 #####################################
 ### Functions
-
-
-
-
-
-
-
-

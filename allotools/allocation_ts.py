@@ -18,8 +18,8 @@ def allo_ts_apply(row, from_date, to_date, freq, restr_col, remove_months=False)
     Pandas apply function that converts the allocation data to a monthly time series.
     """
 
-    crc_from_date = pd.Timestamp(row['from_date'])
-    crc_to_date = pd.Timestamp(row['to_date'])
+    crc_from_date = pd.Timestamp(row['FromDate'])
+    crc_to_date = pd.Timestamp(row['ToDate'])
     start = pd.Timestamp(from_date)
     end = pd.Timestamp(to_date)
 
@@ -31,8 +31,8 @@ def allo_ts_apply(row, from_date, to_date, freq, restr_col, remove_months=False)
     end_date = end - pd.DateOffset(hours=1) + pd.tseries.frequencies.to_offset(freq)
     dates1 = pd.date_range(start, end_date, freq=freq)
     if remove_months and ('A' not in freq):
-        mon1 = np.arange(row['from_month'], 13)
-        mon2 = np.arange(1, row['to_month'] + 1)
+        mon1 = np.arange(row['FromMonth'], 13)
+        mon2 = np.arange(1, row['ToMonth'] + 1)
         in_mons = np.concatenate((mon1, mon2))
         dates1 = dates1[dates1.month.isin(in_mons)]
 

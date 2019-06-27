@@ -8,17 +8,17 @@ Created on Tue Oct  2 13:17:03 2018
 #####################################
 ### Misc parameters for the various functions
 
-server = 'edwprod01'
-database = 'hydro'
-allo_table = 'CrcAllo'
-wap_allo_table = 'CrcWapAllo'
+hydro_server = 'edwprod01'
+hydro_database = 'hydro'
+crc_server = 'edwdev01'
+crc_database = 'ConsentsReporting'
+allo_table = 'reporting.CrcAlloSiteSumm'
 site_table = 'ExternalSite'
 ts_summ_table = 'TSDataNumericDailySumm'
 ts_table = 'TSDataNumericDaily'
-lf_band_table = 'LowFlowRestrSiteBand'
-lf_band_crc_table = 'LowFlowRestrSiteBandCrc'
+lf_table = 'reporting.TSCrcBlockRestr'
 
-dataset_dict = {9: 'Take Surface Water', 12: 'Take Groundwater'}
+dataset_dict = {9: 'Surface Water', 12: 'Groundwater'}
 
 sd_dict = {7: 'sd1_7', 30: 'sd1_30', 150: 'sd1_150'}
 
@@ -28,7 +28,7 @@ use_type_dict = {'Aquaculture': 'irrigation', 'Dairy Shed (Washdown/Cooling)': '
 
 restr_type_dict = {'max rate': 'max_rate_crc', 'daily volume': 'daily_vol', 'annual volume': 'feav'}
 
-allo_type_dict = {'D': 'daily_vol', 'W': 'daily_vol', 'M': 'feav', 'A-JUN': 'feav', 'A': 'feav'}
+allo_type_dict = {'D': 'AllocatedRate', 'W': 'AllocatedRate', 'M': 'AllocatedAnnualVolume', 'A-JUN': 'AllocatedAnnualVolume', 'A': 'AllocatedAnnualVolume'}
 
 freq_codes = ['D', 'W', 'M', 'A-JUN']
 
@@ -36,11 +36,9 @@ dataset_types = ['allo', 'metered_allo', 'restr_allo', 'metered_restr_allo', 'us
 
 pk = ['crc', 'take_type', 'allo_block', 'wap', 'date']
 
-crc_wap_cols = set(['crc', 'take_type', 'allo_block', 'wap', 'max_rate_wap', 'in_sw_allo', 'sd1_7', 'sd1_30', 'sd1_150'])
+allo_cols = ['RecordNumber', 'HydroFeature', 'AllocationBlock', 'ExtSiteID', 'FromDate', 'ToDate', 'FromMonth', 'ToMonth', 'AllocatedRate', 'AllocatedAnnualVolume', 'WaterUse', 'IrrigationArea', 'ConsentStatus']
 
-crc_cols = set(['crc', 'take_type', 'allo_block', 'max_rate_crc', 'daily_vol', 'feav', 'crc_status', 'from_date', 'to_date', 'from_month', 'to_month', 'in_gw_allo', 'use_type'])
-
-site_cols = set(['ExtSiteID', 'ExtSiteName', 'NZTMX', 'NZTMY', 'CatchmentName', 'CatchmentNumber', 'CatchmentGroupName', 'CatchmentGroupNumber', 'SwazName', 'SwazGroupName', 'SwazSubRegionalName', 'GwazName', 'CwmsName'])
+site_cols = ['ExtSiteID', 'ExtSiteName', 'NZTMX', 'NZTMY', 'CatchmentName', 'CatchmentNumber', 'CatchmentGroupName', 'CatchmentGroupNumber', 'SwazName', 'SwazGroupName', 'SwazSubRegionalName', 'GwazName', 'CwmsName']
 
 
 temp_datasets = ['allo_ts', 'total_allo_ts', 'restr_allo_ts', 'lf_restr', 'usage_crc_ts', 'usage_ts', 'usage_crc_ts', 'metered_allo_ts', 'metered_restr_allo_ts']

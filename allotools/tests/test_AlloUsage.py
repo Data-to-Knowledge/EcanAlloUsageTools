@@ -7,12 +7,15 @@ Created on Mon Feb 18 09:13:34 2019
 import os
 from allotools import AlloUsage
 from pdsql import mssql
+import pandas as pd
+
+pd.options.display.max_columns = 10
 
 
 #######################################
 ### Parameters
 
-server = 'sql2012test01'
+server = 'edwprod01'
 database = 'hydro'
 sites_table = 'ExternalSite'
 
@@ -115,9 +118,9 @@ a1.allo_wap.to_csv(os.path.join(export_path, 'waitaki_allo_wap_2019-02-27.csv'))
 
 
 
-
-
-
+a1 = AlloUsage(site_filter={'CatchmentGroupName': ['Waitaki']})
+self = a1
+a1.freq = freq
 
 
 

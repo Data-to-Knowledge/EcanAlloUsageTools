@@ -11,10 +11,10 @@ from allotools import filters
 #import filters
 from allotools.allocation_ts import allo_ts_apply
 #from allocation_ts import allo_ts_apply
-#from allotools.plot import plot_group as pg
-#from allotools.plot import plot_stacked as ps
-from plot import plot_group as pg
-from plot import plot_stacked as ps
+from allotools.plot import plot_group as pg
+from allotools.plot import plot_stacked as ps
+#from plot import plot_group as pg
+#from plot import plot_stacked as ps
 from allotools import parameters as param
 #import parameters as param
 from datetime import datetime

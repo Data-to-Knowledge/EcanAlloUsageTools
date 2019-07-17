@@ -210,7 +210,7 @@ class AlloUsage(object):
             setattr(self, 'metered_restr_allo_ts', allo3)
 
 
-    def _process_usage(self):
+    def _process_usage(self, daily_usage_allo_ratio=2):
         """
 
         """
@@ -219,42 +219,42 @@ class AlloUsage(object):
             self._usage_summ()
         ts_usage_summ = self.ts_usage_summ.copy()
 
-        ## Get the ts data and aggregate
+        ### Get the allo for filtering
+        allo1 = self.allo.reset_index()[['Wap', 'AllocatedRate']]
+        allo2 = allo1.groupby('Wap').max()
+        allo2 = allo2[allo2.AllocatedRate > 0].reset_index().copy()
+
+        ### Get the ts data and aggregate
         if hasattr(self, 'usage_ts_daily'):
             tsdata1 = self.usage_ts_daily
         else:
-            tsdata1 = mssql.rd_sql(self.ts_server, self.ts_db, param.ts_table, ['ExtSiteID', 'DateTime', 'Value'], where_in={'ExtSiteID': ts_usage_summ.Wap.unique().tolist(), 'DatasetTypeID': ts_usage_summ.DatasetTypeID.unique().tolist()}, from_date=self.from_date, to_date=self.to_date, date_col='DateTime')
+            tsdata1 = mssql.rd_sql(self.ts_server, self.ts_db, param.ts_table, ['ExtSiteID', 'DateTime', 'Value'], where_in={'ExtSiteID': ts_usage_summ.Wap.unique().tolist(), 'DatasetTypeID': ts_usage_summ.DatasetTypeID.unique().tolist()}, from_date=self.from_date, to_date=self.to_date, date_col='DateTime').dropna()
 
             tsdata1['DateTime'] = pd.to_datetime(tsdata1['DateTime'])
             tsdata1.rename(columns={'DateTime': 'Date', 'ExtSiteID': 'Wap', 'Value': 'TotalUsage'}, inplace=True)
 
-            ### filter - remove individual spikes and negative values
+            ## filter - remove individual spikes and negative values
             tsdata1.loc[tsdata1['TotalUsage'] < 0, 'TotalUsage'] = 0
 
-            def remove_spikes(x):
-                val1 = bool(x[1] > (x[0] + x[2] + 2))
-                if val1:
-                    return (x[0] + x[2])/2
-                else:
-                    return x[1]
+            ## Filter - Remove data above daily ratio
+            tsdata1a = pd.merge(tsdata1, allo2, on='Wap')
+            tsdata1b = tsdata1a[(tsdata1a['TotalUsage']/(tsdata1a['AllocatedRate']*60*60*24*0.001)) < daily_usage_allo_ratio].copy()
 
-            tsdata1.iloc[1:-1, 2] = tsdata1['TotalUsage'].rolling(3, center=True).apply(remove_spikes, raw=True).iloc[1:-1]
-
-            setattr(self, 'usage_ts_daily', tsdata1)
+            setattr(self, 'usage_ts_daily', tsdata1b)
 
         ### Aggregate
-        tsdata2 = util.grp_ts_agg(tsdata1, 'Wap', 'Date', self.freq).sum()
+        tsdata2 = util.grp_ts_agg(tsdata1b, 'Wap', 'Date', self.freq).sum()
 
         setattr(self, 'usage_ts', tsdata2)
 
 
-    def _get_usage_ts(self, usage_allo_ratio=2):
+    def _get_usage_ts(self, yr_usage_allo_ratio=2, daily_usage_allo_ratio=2):
         """
 
         """
         ### Get the usage data if it exists
         if not hasattr(self, 'usage_ts'):
-            self._process_usage()
+            self._process_usage(daily_usage_allo_ratio)
         tsdata2 = self.usage_ts.copy()
 
         if not hasattr(self, 'allo_ts'):
@@ -270,7 +270,7 @@ class AlloUsage(object):
 
         ### Remove high outliers
         t1 = util.grp_ts_agg(usage1, ['RecordNumber', 'AllocationBlock'], 'Date', 'A-Jun')[['TotalAllo', 'TotalUsage']].transform('sum')
-        t2 = t1['TotalUsage'] > (t1['TotalAllo'] * usage_allo_ratio)
+        t2 = t1['TotalUsage'] > (t1['TotalAllo'] * yr_usage_allo_ratio)
         usage1.loc[t2.values, 'TotalUsage'] = np.nan
 
         ### Split the GW and SW components
@@ -339,7 +339,7 @@ class AlloUsage(object):
         setattr(self, 'restr_allo_ts', allo2)
 
 
-    def get_ts(self, datasets, freq, groupby, irr_season=False, usage_allo_ratio=2, combine_meters=False):
+    def get_ts(self, datasets, freq, groupby, irr_season=False, daily_usage_allo_ratio=2, yr_usage_allo_ratio=2, combine_meters=False):
         """
         Function to create a time series of allocation and usage.
 
@@ -404,7 +404,7 @@ class AlloUsage(object):
             self._get_metered_allo_ts(True, combine_meters=combine_meters)
             all1.append(self.metered_restr_allo_ts)
         if 'Usage' in datasets:
-            self._get_usage_ts(usage_allo_ratio)
+            self._get_usage_ts(yr_usage_allo_ratio, daily_usage_allo_ratio)
             all1.append(self.usage_crc_ts)
 
         if 'A' in freq_agg:

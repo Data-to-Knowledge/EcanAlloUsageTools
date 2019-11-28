@@ -10,7 +10,7 @@ Created on Tue Oct  2 13:17:03 2018
 
 hydro_server = 'edwprod01'
 hydro_database = 'hydro'
-crc_server = 'edwdev01'
+crc_server = 'edwprod01'
 crc_database = 'ConsentsReporting'
 allo_table = 'reporting.CrcAlloSiteSumm'
 site_table = 'ExternalSite'

@@ -55,8 +55,7 @@ def allo_ts_apply(row, from_date, to_date, freq, restr_col, remove_months=True):
         vol1 = s1.copy()
         vol1[:] = row[restr_col]
     elif 'M' in freq:
-        year1 = s1.resample('A-JUN').transform('sum')
-        vol1 = s1/year1 * row[restr_col]
+        vol1 = s1/365 * row[restr_col]
     else:
         raise ValueError("freq must be either 'A-JUN', 'M', 'W', or 'D'")
 

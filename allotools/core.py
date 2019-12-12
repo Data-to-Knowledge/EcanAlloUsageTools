@@ -97,7 +97,7 @@ class AlloUsage(object):
         waps = allo_sites1.Wap.unique()
 
         setattr(self, 'waps', waps)
-        setattr(self, 'allo', allo_sites1.set_index(['RecordNumber', 'HydroFeature', 'AllocationBlock', 'Wap']))
+        setattr(self, 'allo', allo_sites1.set_index(['RecordNumber', 'HydroGroup', 'AllocationBlock', 'Wap']))
 
         if from_date is None:
             from_date = '1900-01-01'
@@ -114,8 +114,8 @@ class AlloUsage(object):
         ### Get the ts summary tables
         ts_summ1 = mssql.rd_sql(self.ts_server, self.ts_db, param.ts_summ_table, ['ExtSiteID', 'DatasetTypeID', 'FromDate', 'ToDate'], {'DatasetTypeID': list(param.dataset_dict.keys())})
         ts_summ2 = ts_summ1[ts_summ1.ExtSiteID.isin(self.waps)].copy()
-#        ts_summ2['HydroFeature'] = ts_summ2['DatasetTypeID']
-#        ts_summ2.replace({'HydroFeature': param.dataset_dict}, inplace=True)
+#        ts_summ2['HydroGroup'] = ts_summ2['DatasetTypeID']
+#        ts_summ2.replace({'HydroGroup': param.dataset_dict}, inplace=True)
         ts_summ2.rename(columns={'ExtSiteID': 'Wap'}, inplace=True)
 
         ts_summ2['FromDate'] = pd.to_datetime(ts_summ2['FromDate'])
@@ -135,7 +135,7 @@ class AlloUsage(object):
         allo3 = self.allo.apply(allo_ts_apply, axis=1, from_date=self.from_date, to_date=self.to_date, freq=self.freq, restr_col=restr_col, remove_months=True)
 
         allo4 = allo3.stack()
-        allo4.index.set_names(['RecordNumber', 'HydroFeature', 'AllocationBlock', 'Wap', 'Date'], inplace=True)
+        allo4.index.set_names(['RecordNumber', 'HydroGroup', 'AllocationBlock', 'Wap', 'Date'], inplace=True)
         allo4.name = 'allo'
 
         ## Rearrange
@@ -437,4 +437,3 @@ class AlloUsage(object):
         data1.set_index(param.pk, inplace=True)
 
         return data1
-

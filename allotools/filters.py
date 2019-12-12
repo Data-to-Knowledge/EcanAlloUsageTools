@@ -46,7 +46,7 @@ def rd_allo(from_date='1900-07-01', to_date='2020-06-30', where_in=None, include
     allo2 = allo1[(allo1.FromDate < to_date) & (allo1.ToDate > from_date)].copy()
 
     ### Index the DataFrame
-    allo2.set_index(['RecordNumber', 'HydroFeature', 'AllocationBlock', 'ExtSiteID'], inplace=True)
+    allo2.set_index(['RecordNumber', 'HydroGroup', 'AllocationBlock', 'ExtSiteID'], inplace=True)
 
     return allo2
 

@@ -10,7 +10,7 @@ here = os.path.abspath(os.path.dirname(__file__))
 name = 'EcanAlloUsageTools'
 main_package = 'allotools'
 # datasets = 'datasets'
-version = '0.2.7'
+version = '0.2.8'
 descrip = 'Functions to process and analyse ECan allocation and usage data'
 
 # The below code is for readthedocs. To have sphinx/readthedocs interact with
@@ -73,7 +73,7 @@ setup(
     #
     # This field corresponds to the "Description" metadata field:
     # https://packaging.python.org/specifications/core-metadata/#description-optional
-    long_description=long_description,  # Optional
+    # long_description=long_description,  # Optional
 
     # This should be a valid link to your project's main homepage.
     #

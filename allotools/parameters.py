@@ -36,7 +36,7 @@ dataset_types = ['Allo', 'RestrAllo', 'MeteredAllo', 'MeteredRestrAllo', 'Usage'
 
 pk = ['RecordNumber', 'AllocationBlock', 'Wap', 'Date']
 
-allo_cols = ['RecordNumber', 'HydroFeature', 'AllocationBlock', 'ExtSiteID', 'FromDate', 'ToDate', 'FromMonth', 'ToMonth', 'AllocatedRate', 'AllocatedAnnualVolume', 'WaterUse', 'IrrigationArea', 'ConsentStatus']
+allo_cols = ['RecordNumber', 'HydroGroup', 'AllocationBlock', 'ExtSiteID', 'FromDate', 'ToDate', 'FromMonth', 'ToMonth', 'AllocatedRate', 'AllocatedAnnualVolume', 'WaterUse', 'IrrigationArea', 'ConsentStatus']
 
 site_cols = ['ExtSiteID', 'ExtSiteName', 'NZTMX', 'NZTMY', 'CatchmentName', 'CatchmentNumber', 'CatchmentGroupName', 'CatchmentGroupNumber', 'SwazName', 'SwazGroupName', 'SwazSubRegionalName', 'GwazName', 'CwmsName']
 
@@ -44,17 +44,3 @@ site_cols = ['ExtSiteID', 'ExtSiteName', 'NZTMX', 'NZTMY', 'CatchmentName', 'Cat
 #temp_datasets = ['allo_ts', 'total_allo_ts', 'restr_allo_ts', 'lf_restr', 'usage_crc_ts', 'usage_ts', 'usage_crc_ts', 'metered_allo_ts', 'metered_restr_allo_ts']
 
 #datasets = {'allo': ['total_allo', 'sw_allo', 'gw_allo'],
-
-
-
-
-
-
-
-
-
-
-
-
-
-

@@ -1,6 +1,6 @@
 {% set name = "EcanAlloUsageTools" %}
-{% set version = "0.1.9" %}
-{% set sha256 = "dda971b4b4af7f91907e5d28c838bffb1e57857bbb3be2401c69392459a8a94f" %}
+{% set version = "0.2.4" %}
+{% set sha256 = "672dade8b50e9e160fd8bbbd099079c916e1fd6361f5769a0301aeba3b835b36" %}
 
 # sha256 is the prefered checksum -- you can get it for a file with:
 #  `openssl sha256 <file name>`.
@@ -43,6 +43,7 @@ requirements:
 test:
   imports:
     - allotools
+    - allotools.core
 
 about:
   home: https://github.com/mullenkamp/EcanAlloUsageTools
